@@ -17,7 +17,7 @@
 #
 
 name 'citadel'
-version '1.0.2'
+version '1.1.0'
 
 maintainer 'Noah Kantrowitz'
 maintainer_email 'noah@coderanger.net'

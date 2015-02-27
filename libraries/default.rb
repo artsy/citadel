@@ -27,6 +27,10 @@ class Citadel
       # Manually specified credentials
       @access_key_id = node['citadel']['access_key_id']
       @secret_access_key = node['citadel']['secret_access_key']
+    elsif creds = iam_credentials_from_metadata_service
+      @access_key_id = creds['AccessKeyId']
+      @secret_access_key = creds['SecretAccessKey']
+      @token = creds['Token']
     elsif node['ec2'] && node['ec2']['iam'] && node['ec2']['iam']['security-credentials']
       # Creds loaded from EC2 metadata server
       # This doesn't yet handle expiration, but it should
@@ -42,6 +46,16 @@ class Citadel
   def [](key)
     Chef::Log.debug("citadel: Retrieving #{@bucket}/#{key}")
     Citadel::S3.get(@bucket, key, @access_key_id, @secret_access_key, @token).to_s
+  end
+
+  def iam_credentials_from_metadata_service
+    require 'open-uri'
+    require 'json'
+
+    iam_role = open("http://169.254.169.254/latest/meta-data/iam/security-credentials/").read
+
+    JSON.parse(open("http://169.254.169.254/latest/meta-data/iam/security-credentials/#{iam_role}").read)
+
   end
 
   # Helper module for the DSL extension

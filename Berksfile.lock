@@ -1,10 +1,11 @@
-{
-  "sources": {
-    "citadel": {
-      "path": "."
-    },
-    "citadel_test": {
-      "path": "./test/cookbooks/citadel_test"
-    }
-  }
-}
+DEPENDENCIES
+  citadel
+    path: .
+    metadata: true
+  citadel_test
+    path: test/cookbooks/citadel_test
+
+GRAPH
+  citadel (1.1.0)
+  citadel_test (0.0.0)
+    citadel (>= 0.0.0)

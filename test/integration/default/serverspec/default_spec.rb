@@ -17,8 +17,7 @@
 #
 
 require 'serverspec'
-include Serverspec::Helper::Exec
-include Serverspec::Helper::DetectOS
+set :backend, :exec
 
 describe file('/a') do
   its(:content) { should == 'citadel' }
