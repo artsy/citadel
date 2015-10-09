@@ -49,13 +49,13 @@ class Citadel
   end
 
   def iam_credentials_from_metadata_service
-    require 'open-uri'
     require 'json'
 
-    iam_role = open("http://169.254.169.254/latest/meta-data/iam/security-credentials/").read
+    metadata_service = Chef::HTTP.new("http://169.254.169.254")
+    iam_role   = metadata_service.get("latest/meta-data/iam/security-credentials/")
+    creds_json = metadata_service.get("latest/meta-data/iam/security-credentials/#{iam_role}")
 
-    JSON.parse(open("http://169.254.169.254/latest/meta-data/iam/security-credentials/#{iam_role}").read)
-
+    JSON.parse(creds_json)
   end
 
   # Helper module for the DSL extension
