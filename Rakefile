@@ -10,8 +10,11 @@ namespace :citadel do
     bucket = bucket_env!
     key = args[:key]
 
+    kms = Aws::KMS::Client.new
+    s3 = Aws::S3::Encryption::Client.new(kms_key_id: key_id_env!, kms_client: kms)
+
     begin
-      response = Aws::S3::Client.new.get_object bucket: bucket, key: key
+      response = s3.get_object bucket: bucket, key: key
       if response.successful?
         puts "Key #{key} already exists in #{bucket}. Aborting."
         exit 1
@@ -21,8 +24,9 @@ namespace :citadel do
 
     t = Tempfile.new('citadel')
     system(ENV['EDITOR'] + ' ' + t.path)
-    save_key_to_bucket! bucket, key, File.open(t.path).read
+    save_key_to_bucket! s3, bucket, key, File.open(t.path).read
     t.unlink
+    puts "Success"
   end
 
   desc "Edit a key"
@@ -30,8 +34,12 @@ namespace :citadel do
     bucket = bucket_env!
     key = args[:key]
 
-    response = Aws::S3::Client.new.get_object bucket: bucket, key: key
-    if !response.successful?
+    kms = Aws::KMS::Client.new
+    s3 = Aws::S3::Encryption::Client.new(kms_key_id: key_id_env!, kms_client: kms)
+
+    begin
+      response = s3.get_object bucket: bucket, key: key
+    rescue Aws::S3::Errors::NoSuchKey
       puts "Could not locate #{key} in #{bucket}. Aborting."
       exit 1
     end
@@ -40,15 +48,54 @@ namespace :citadel do
     t.write(response.data.body.read)
     t.close
     system(ENV['EDITOR'] + ' ' + t.path)
-    save_key_to_bucket! bucket, key, File.open(t.path).read
+    save_key_to_bucket! s3, bucket, key, File.open(t.path).read
     t.unlink
+    puts "Success"
   end
 
-  def save_key_to_bucket!(bucket, key, payload)
+  desc "Get a key"
+  task :get, [:key] do |t, args|
+    bucket = bucket_env!
+    key = args[:key]
+
+    kms = Aws::KMS::Client.new
+    s3 = Aws::S3::Encryption::Client.new(kms_key_id: key_id_env!, kms_client: kms)
+
+    begin
+      response = s3.get_object bucket: bucket, key: key
+    rescue Aws::S3::Errors::NoSuchKey
+      puts "Could not locate #{key} in #{bucket}. Aborting."
+      exit 1
+    end
+
+    puts response.data.body.read
+
+  end
+
+  desc "Delete a key"
+  task :delete, [:key] do |t, args|
+    bucket = bucket_env!
+    key = args[:key]
+
+    s3 = Aws::S3::Client.new
+
+    begin
+      response = s3.get_object bucket: bucket, key: key
+    rescue Aws::S3::Errors::NoSuchKey
+      puts "Could not locate #{key} in #{bucket}. Aborting."
+      exit 1
+    end
+
+    s3.delete_object bucket: bucket, key: key
+    puts "Deleted #{key} from #{bucket}"
+
+  end
+
+  def save_key_to_bucket!(s3, bucket, key, payload)
     begin
       JSON.parse payload
       puts "Saving #{key} to #{bucket}"
-      Aws::S3::Client.new.put_object bucket: bucket, key: key, body: payload
+      s3.put_object bucket: bucket, key: key, body: payload
       puts "Success!"
       exit 0
     rescue JSON::ParserError
@@ -63,6 +110,14 @@ namespace :citadel do
       exit 1
     end
     ENV['CITADEL_BUCKET']
+  end
+
+  def key_id_env!
+    if ENV['CITADEL_KEY_ID'].nil?
+      puts "Set CITADEL_KEY_ID."
+      exit 1
+    end
+    ENV['CITADEL_KEY_ID']
   end
 
 end

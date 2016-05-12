@@ -1,1 +1,9 @@
+# Test kitchen
 .kitchen/
+
+# Berkshelf
+berks-cookbooks
+
+# Vagrant
+.vagrant
+vagrant-*.json

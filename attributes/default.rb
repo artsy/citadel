@@ -18,6 +18,8 @@
 
 # Default S3 bucket to use for Citadel data
 default['citadel']['bucket'] = nil
+default['citadel']['region'] = "us-east-1"
+default['citadel']['kms_key_id'] = nil
 
 # Override these for use in Vagrant or other development environments
 default['citadel']['access_key_id'] = nil
