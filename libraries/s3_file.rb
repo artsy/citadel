@@ -27,6 +27,7 @@
 require 'time'
 require 'openssl'
 require 'base64'
+require 'json'
 
 class Citadel
   class CitadelError < Exception; end
@@ -51,11 +52,16 @@ class Citadel
       }
       headers['x-amz-security-token'] = token if token
       begin
-        Chef::HTTP.new("https://#{bucket}.s3.amazonaws.com").get(path, headers)
+        payload = Chef::HTTP.new("https://#{bucket}.s3.amazonaws.com").get(path, headers)
       rescue Net::HTTPServerException => e
         raise CitadelError, "Unable to download #{path}: #{e}"
       end
-    end
 
+      begin
+        JSON.parse payload
+      rescue JSON::ParserError
+        payload
+      end
+    end
   end
 end
