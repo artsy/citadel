@@ -44,7 +44,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
        chef.json = {
         :citadel => {
           :access_key_id => ENV['AWS_ACCESS_KEY_ID'],
-          :secret_access_key => ENV['AWS_SECRET_ACCESS_KEY']
+          :secret_access_key => ENV['AWS_SECRET_ACCESS_KEY'],
+          :kms_key_id => ENV['CITADEL_KEY_ID']
         }
        }
 

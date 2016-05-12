@@ -7,3 +7,12 @@ berks-cookbooks
 # Vagrant
 .vagrant
 vagrant-*.json
+
+variables.tf
+*.tfplan
+*.tfstate
+*.tfstate.backup
+
+# Chef
+.chef
+nodes/*.json

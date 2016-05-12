@@ -29,11 +29,10 @@ class Citadel
   module S3
     extend self
 
-    def get(bucket, key, aws_access_key_id, aws_secret_access_key, region, kms_key_id=nil, token=nil)
+    def get(bucket, key, credentials, region, kms_key_id=nil)
       require 'json'
       require 'aws-sdk'
 
-      credentials = Aws::Credentials.new(aws_access_key_id, aws_secret_access_key, token)
       s3 = Aws::S3::Client.new(region: region, credentials: credentials)
 
       begin

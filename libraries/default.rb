@@ -17,51 +17,28 @@
 #
 
 class Citadel
-  attr_reader :bucket, :access_key_id, :secret_access_key, :token
+  attr_reader :bucket, :region, :kms_key_id, :credentials
 
   def initialize(node, bucket=nil)
+    require 'aws-sdk'
+
     @node = node
     @bucket = bucket || node['citadel']['bucket']
     @region = node['citadel']['region']
     @kms_key_id = node['citadel']['kms_key_id']
 
-    if node['citadel']['access_key_id']
+    if node['citadel']['access_key_id'] && node['citadel']['secret_access_key']
       # Manually specified credentials
-      @access_key_id = node['citadel']['access_key_id']
-      @secret_access_key = node['citadel']['secret_access_key']
-    elsif node['ec2'] && creds = iam_credentials_from_metadata_service
-      # Creds loaded from EC2 metadata server
-      @access_key_id = creds.fetch('AccessKeyId')
-      @secret_access_key = creds.fetch('SecretAccessKey')
-      @token = creds.fetch('Token')
-    elsif node['ec2'] && node['ec2']['iam'] && node['ec2']['iam']['security-credentials']
-      # This doesn't yet handle expiration, but it should
-      role_creds = node['ec2']['iam']['security-credentials'].values.first
-      @access_key_id = role_creds['AccessKeyId']
-      @secret_access_key = role_creds['SecretAccessKey']
-      @token = role_creds['Token']
+      @credentials = Aws::Credentials.new(node['citadel']['access_key_id'], node['citadel']['secret_access_key'])
     else
-      raise 'Unable to load secrets from S3, no S3 credentials found'
+      # IAM credentials
+      @credentials = Aws::InstanceProfileCredentials.new
     end
   end
 
   def [](key)
     Chef::Log.debug("citadel: Retrieving #{@bucket}/#{key}")
-    Citadel::S3.get(@bucket, key, @access_key_id, @secret_access_key, @region, @kms_key_id, @token)
-  end
-
-  def iam_credentials_from_metadata_service
-    require 'json'
-
-    metadata_service = Chef::HTTP.new("http://169.254.169.254")
-    iam_role = metadata_service.get("latest/meta-data/iam/security-credentials/")
-
-    if iam_role.nil? || iam_role.empty?
-      return false
-    else
-      creds_json = metadata_service.get("latest/meta-data/iam/security-credentials/#{iam_role}")
-      return JSON.parse(creds_json)
-    end
+    Citadel::S3.get(@bucket, key, @credentials, @region, @kms_key_id)
   end
 
   # Helper module for the DSL extension

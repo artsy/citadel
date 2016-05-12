@@ -3,7 +3,7 @@ require 'tempfile'
 require 'json'
 require 'aws-sdk'
 
-namespace :citadel do
+namespace :citadel_secure do
 
   desc "Create a key"
   task :create, [:key] do |t, args|
