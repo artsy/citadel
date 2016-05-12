@@ -29,19 +29,19 @@ class Citadel
   module S3
     extend self
 
-    def get(bucket, key, credentials, region, kms_key_id=nil)
+    def get(bucket, key, credentials, region, kms_key_id)
       require 'json'
       require 'aws-sdk'
 
-      s3 = Aws::S3::Client.new(region: region, credentials: credentials)
+      if kms_key_id.nil?
+        raise "Could not load kms_key_id"
+      end
+
+      s3c = Aws::S3::Client.new(region: region, credentials: credentials)
+      s3 = Aws::S3::Encryption::Client.new(kms_key_id: kms_key_id, client: s3c)
 
       begin
-        if kms_key_id.nil?
-          response = s3.get_object bucket: bucket, key: key
-        else
-          s3 = Aws::S3::Encryption::Client.new(kms_key_id: kms_key_id, client: s3)
-          response = s3.get_object bucket: bucket, key: key
-        end
+        response = s3.get_object bucket: bucket, key: key
       rescue Aws::S3::Errors::NoSuchKey
         raise "Could not locate #{key} in #{bucket}"
       end
