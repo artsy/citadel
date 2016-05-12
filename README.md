@@ -74,7 +74,6 @@ Attributes
 
 * `node['citadel']['bucket']` – The default S3 bucket to use.
 * `node['citadel']['region']` – The default S3 region to use.
-* `node['citadel']['kms_key_id']` – The KMS key id to use for decryption
 
 Recipe Usage
 ------------

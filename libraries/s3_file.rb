@@ -29,24 +29,30 @@ class Citadel
   module S3
     extend self
 
-    def get(bucket, key, credentials, region, kms_key_id)
+    def get(bucket, key, credentials, region)
       require 'json'
       require 'aws-sdk'
 
-      if kms_key_id.nil?
-        raise "Could not load kms_key_id"
-      end
-
-      s3c = Aws::S3::Client.new(region: region, credentials: credentials)
-      s3 = Aws::S3::Encryption::Client.new(kms_key_id: kms_key_id, client: s3c)
+      s3 = Aws::S3::Client.new(region: region, credentials: credentials)
 
       begin
-        response = s3.get_object bucket: bucket, key: key
+        meta = s3.head_object bucket: bucket, key: key
       rescue Aws::S3::Errors::NoSuchKey
-        raise "Could not locate #{key} in #{bucket}"
+        raise "Could not locate #{key} in #{bucket}. Aborting."
       end
 
+      begin
+        kms_key_id = JSON.parse(meta[:metadata]["x-amz-matdesc"])["kms_cmk_id"]
+      rescue
+        raise "Could not load kms_cmk_id"
+      end
+
+      kms = Aws::KMS::Client.new(region: region, credentials: credentials)
+      s3e = Aws::S3::Encryption::Client.new(kms_key_id: kms_key_id, kms_client: kms, client: s3)
+
+      response = s3e.get_object bucket: bucket, key: key
       payload = response.data.body.read
+
       begin
         JSON.parse payload
       rescue JSON::ParserError

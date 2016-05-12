@@ -17,7 +17,7 @@
 #
 
 class Citadel
-  attr_reader :bucket, :region, :kms_key_id, :credentials
+  attr_reader :bucket, :region, :credentials
 
   def initialize(node, bucket=nil)
     require 'aws-sdk'
@@ -25,7 +25,6 @@ class Citadel
     @node = node
     @bucket = bucket || node['citadel']['bucket']
     @region = node['citadel']['region']
-    @kms_key_id = node['citadel']['kms_key_id']
 
     if node['citadel']['access_key_id'] && node['citadel']['secret_access_key']
       # Manually specified credentials
@@ -38,7 +37,7 @@ class Citadel
 
   def [](key)
     Chef::Log.debug("citadel: Retrieving #{@bucket}/#{key}")
-    Citadel::S3.get(@bucket, key, @credentials, @region, @kms_key_id)
+    Citadel::S3.get(@bucket, key, @credentials, @region)
   end
 
   # Helper module for the DSL extension

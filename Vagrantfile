@@ -45,8 +45,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         :citadel => {
           :access_key_id => ENV['AWS_ACCESS_KEY_ID'],
           :secret_access_key => ENV['AWS_SECRET_ACCESS_KEY'],
-          :bucket => ENV['CITADEL_BUCKET'],
-          :kms_key_id => ENV['CITADEL_KEY_ID']
+          :bucket => ENV['CITADEL_BUCKET']
         }
        }
 

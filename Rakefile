@@ -58,16 +58,20 @@ namespace :citadel do
     bucket = bucket_env!
     key = args[:key]
 
-    kms = Aws::KMS::Client.new
-    s3 = Aws::S3::Encryption::Client.new(kms_key_id: key_id_env!, kms_client: kms)
+    s3 = Aws::S3::Client.new
 
     begin
-      response = s3.get_object bucket: bucket, key: key
+      meta = s3.head_object bucket: bucket, key: key
     rescue Aws::S3::Errors::NoSuchKey
       puts "Could not locate #{key} in #{bucket}. Aborting."
       exit 1
     end
 
+    kms_key_id = JSON.parse(meta[:metadata]["x-amz-matdesc"])["kms_cmk_id"]
+
+    kms = Aws::KMS::Client.new
+    s3e = Aws::S3::Encryption::Client.new(kms_key_id: kms_key_id, kms_client: kms, client: s3)
+    response = s3e.get_object bucket: bucket, key: key
     puts response.data.body.read
 
   end
