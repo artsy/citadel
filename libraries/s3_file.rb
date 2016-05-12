@@ -42,7 +42,7 @@ class Citadel
       string_to_sign << "x-amz-security-token:#{token}\n" if token
       string_to_sign << "/#{bucket}/#{path}"
 
-      signed = OpenSSL::HMAC.digest(OpenSSL::Digest::Digest.new('sha1'), aws_secret_access_key, string_to_sign)
+      signed = OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha1'), aws_secret_access_key, string_to_sign)
       signed_base64 = Base64.encode64(signed)
 
       headers = {
