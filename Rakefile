@@ -7,6 +7,7 @@ namespace :citadel do
 
   desc "Create a key"
   task :create, [:key] do |t, args|
+    ensure_editor!
     bucket = bucket_env!
     key = args[:key]
 
@@ -31,6 +32,7 @@ namespace :citadel do
 
   desc "Edit a key"
   task :edit, [:key] do |t, args|
+    ensure_editor!
     bucket = bucket_env!
     key = args[:key]
 
@@ -122,6 +124,13 @@ namespace :citadel do
       exit 1
     end
     ENV['CITADEL_KEY_ID']
+  end
+
+  def ensure_editor!
+    if ENV['EDITOR'].nil?
+      puts "Set EDITOR."
+      exit 1
+    end
   end
 
 end
