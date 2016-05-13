@@ -1,9 +1,11 @@
 #
 # Author:: Brandon Adams <brandon.adams@me.com>
 # Author:: Noah Kantrowitz <noah@coderanger.net>
+# Author:: Isac Petruzzi <isac@artsymail.com>
 #
 # Copyright 2012-2013, Brandon Adams and other contributors
 # Copyright 2013, Balanced, Inc.
+# Copyright 2016, Artsy, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the

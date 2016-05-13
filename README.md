@@ -8,8 +8,7 @@ Overview
 --------
 
 IAM roles allow specifying snippets of IAM policies in a way that can be used
-from an EC2 virtual machine. Combined with a private S3 bucket, this can be
-used to authorize specific hosts to specific files.
+from an EC2 virtual machine. Combined with a private S3 bucket and Amazon's Key Management Service, this can be used to authorize specific hosts and decryption rights to specific encrypted files.
 
 IAM Roles can be created [in the AWS Console](https://console.aws.amazon.com/iam/home#roles).
 While the policies applied to a role can be changed later, the name cannot so
@@ -18,17 +17,7 @@ be careful when choosing them.
 Requirements
 ------------
 
-This cookbook requires Chef 11.8 or newer. It also requires the EC2 ohai plugin
-to be active. If you are using a VPC, this may require setting the hint file:
-
-```bash
-$ mkdir -p /etc/chef/ohai/hints
-$ touch /etc/chef/ohai/hints/ec2.json
-$ touch /etc/chef/ohai/hints/iam.json
-```
-
-If you use knife-ec2 to start the instance, the ec2 hint file is already set for you
-but the iam hint is not.
+This cookbook requires Chef 11.8 or newer.
 
 IAM Policy
 ----------
@@ -78,7 +67,11 @@ Attributes
 Recipe Usage
 ------------
 
-You can access secret data via the `citadel` method.
+You must include the default recipe before running the `citadel` method.
+
+`include_recipe "citadel::default"`
+
+You can then access secret data via the `citadel` method.
 
 ```ruby
 file '/etc/secret' do
@@ -100,6 +93,9 @@ template '/etc/secret' do
   variables secret: citadel('mybucket')['id_rsa']
 end
 ```
+
+The S3 key will be decrypted via the KMS envelope decryption policy.  Make sure to configure
+the instance IAM role rights to decrypt keys stored in this bucket.
 
 Developing with Vagrant
 -----------------------
@@ -152,9 +148,7 @@ all of your IAM policies.
 Managing Secrets
 ----------------
 
-You can use any S3 client you prefer to manage your secrets, however make sure
-that new files are set to private (accessible only to the creating user) by
-default.
+Rake tasks are provided to manage secret keys.  To get started, create a S3 bucket and KMS master key. Set the `CITADEL_BUCKET` and `CITADEL_KEY_ID` environment variables and create a key with `rake citadel:create[new_key]`.  This will open your `$EDITOR` for editing, and encrypt / upload the contents to S3.
 
 TLS verification
 ----------------
