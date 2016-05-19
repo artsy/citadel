@@ -1,8 +1,12 @@
 source 'https://rubygems.org'
 
-gem 'rake'
-gem 'aws-sdk'
+group :cli do
+	gem 'rake'
+	gem 'aws-sdk'
+end
 
-gem 'berkshelf'
-gem 'chef'
-gem 'knife-solo'
+group :provisioning do
+	gem 'berkshelf'
+	gem 'chef'
+	gem 'knife-solo'
+end

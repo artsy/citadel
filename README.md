@@ -1,14 +1,15 @@
 Citadel cookbook
 ================
 
-Using a combination of IAM roles, S3 buckets, and EC2 it is possible to use AWS
+Using a combination of IAM roles, S3 buckets, KMS and EC2 it is possible to use AWS
 as a trusted-third-party for distributing secret or otherwise sensitive data.
 
 Overview
 --------
 
 IAM roles allow specifying snippets of IAM policies in a way that can be used
-from an EC2 virtual machine. Combined with a private S3 bucket and Amazon's Key Management Service, this can be used to authorize specific hosts and decryption rights to specific encrypted files.
+from an EC2 virtual machine. Combined with a private S3 bucket and Amazon's Key Management Service (KMS),
+this can be used to authorize specific hosts and decryption rights to specific encrypted files.
 
 IAM Roles can be created [in the AWS Console](https://console.aws.amazon.com/iam/home#roles).
 While the policies applied to a role can be changed later, the name cannot so
@@ -18,6 +19,7 @@ Requirements
 ------------
 
 This cookbook requires Chef 11.8 or newer.
+
 
 IAM Policy
 ----------
@@ -49,6 +51,17 @@ The key pattern can include `*` and `?` metacharacters, so for example
 
 This policy can be attached to either the IAM role or the S3 bucket with equal
 effect.
+
+KMS and Key management
+----------------------
+
+Amazon KMS uses IAM policies to grant encryption / decryption rights to entities.  To get started creating secure keys,
+first create a new encryption key in the KMS console.  You can find this under IAM -> Encryption Keys.  Authorize yourself,
+as well as any administrators you wish to authorize changes to tthe key accordingly.  Authorize the IAM policy you created above
+to decrypt keys.
+
+This repo includes a set of Rake tasks to help you create, read, update, delete keys.  First install the `cli` group dependencies with bundler.
+Set `CITADEL_BUCKET` and `CITADEL_KEY_ID` accordingly, and `EDITOR` if unset.  Run `rake -T` to see all available tasks.
 
 Limitations
 -----------

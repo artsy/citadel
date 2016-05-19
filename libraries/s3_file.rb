@@ -43,16 +43,19 @@ class Citadel
         raise "Could not locate #{key} in #{bucket}. Aborting."
       end
 
-      begin
-        kms_key_id = JSON.parse(meta[:metadata]["x-amz-matdesc"])["kms_cmk_id"]
-      rescue
-        raise "Could not load kms_cmk_id"
+      if meta[:metadata]["x-amz-matdesc"].nil?
+        s3_client = s3
+      else
+        begin
+          kms_key_id = JSON.parse(meta[:metadata]["x-amz-matdesc"])["kms_cmk_id"]
+        rescue
+          raise "Could not load kms_cmk_id"
+        end
+        kms = Aws::KMS::Client.new(region: region, credentials: credentials)
+        s3_client = Aws::S3::Encryption::Client.new(kms_key_id: kms_key_id, kms_client: kms, client: s3)
       end
 
-      kms = Aws::KMS::Client.new(region: region, credentials: credentials)
-      s3e = Aws::S3::Encryption::Client.new(kms_key_id: kms_key_id, kms_client: kms, client: s3)
-
-      response = s3e.get_object bucket: bucket, key: key
+      response = s3_client.get_object bucket: bucket, key: key
       payload = response.data.body.read
 
       begin
