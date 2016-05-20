@@ -47,7 +47,7 @@ namespace :citadel do
     t.write(response.data.body.read)
     t.close
     system(ENV['EDITOR'] + ' ' + t.path)
-    save_key_to_bucket! s3_client, bucket, key, File.open(t.path).read
+    save_key_to_bucket! s3, bucket, key, File.open(t.path).read
     t.unlink
     puts "Success"
   end
