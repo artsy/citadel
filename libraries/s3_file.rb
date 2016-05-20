@@ -38,24 +38,11 @@ class Citadel
       s3 = Aws::S3::Client.new(region: region, credentials: credentials)
 
       begin
-        meta = s3.head_object bucket: bucket, key: key
+        response = s3_client.get_object bucket: bucket, key: key
       rescue Aws::S3::Errors::NoSuchKey
         raise "Could not locate #{key} in #{bucket}. Aborting."
       end
 
-      if meta[:metadata]["x-amz-matdesc"].nil?
-        s3_client = s3
-      else
-        begin
-          kms_key_id = JSON.parse(meta[:metadata]["x-amz-matdesc"])["kms_cmk_id"]
-        rescue
-          raise "Could not load kms_cmk_id"
-        end
-        kms = Aws::KMS::Client.new(region: region, credentials: credentials)
-        s3_client = Aws::S3::Encryption::Client.new(kms_key_id: kms_key_id, kms_client: kms, client: s3)
-      end
-
-      response = s3_client.get_object bucket: bucket, key: key
       payload = response.data.body.read
 
       begin

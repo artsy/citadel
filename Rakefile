@@ -5,38 +5,13 @@ require 'aws-sdk'
 
 namespace :citadel do
 
-  desc "Create a plaintext key"
-  task :create_plain, [:key] do |t, args|
+  desc "Create a key"
+  task :create, [:key] do |t, args|
     ensure_editor!
     bucket = bucket_env!
     key = args[:key]
 
     s3 = Aws::S3::Client.new()
-
-    begin
-      response = s3.get_object bucket: bucket, key: key
-      if response.successful?
-        puts "Key #{key} already exists in #{bucket}. Aborting."
-        exit 1
-      end
-    rescue Aws::S3::Errors::NoSuchKey
-    end
-
-    t = Tempfile.new('citadel')
-    system(ENV['EDITOR'] + ' ' + t.path)
-    save_key_to_bucket! s3, bucket, key, File.open(t.path).read
-    t.unlink
-    puts "Success"
-  end
-
-  desc "Create an encrypted key"
-  task :create_secure, [:key] do |t, args|
-    ensure_editor!
-    bucket = bucket_env!
-    key = args[:key]
-
-    kms = Aws::KMS::Client.new
-    s3 = Aws::S3::Encryption::Client.new(kms_key_id: key_id_env!, kms_client: kms)
 
     begin
       response = s3.get_object bucket: bucket, key: key
@@ -61,22 +36,12 @@ namespace :citadel do
     key = args[:key]
 
     s3 = Aws::S3::Client.new
-
     begin
-      meta = s3.head_object bucket: bucket, key: key
+      response = s3.get_object bucket: bucket, key: key
     rescue Aws::S3::Errors::NoSuchKey
       puts "Could not locate #{key} in #{bucket}. Aborting."
       exit 1
     end
-
-    if meta[:metadata]["x-amz-matdesc"].nil?
-      s3_client = s3
-    else
-      kms = Aws::KMS::Client.new
-      s3_client = Aws::S3::Encryption::Client.new(kms_key_id: key_id_env!, kms_client: kms)
-    end
-
-    response = s3_client.get_object bucket: bucket, key: key
 
     t = Tempfile.new('citadel')
     t.write(response.data.body.read)
@@ -93,23 +58,12 @@ namespace :citadel do
     key = args[:key]
 
     s3 = Aws::S3::Client.new
-
     begin
-      meta = s3.head_object bucket: bucket, key: key
+      response = s3.get_object bucket: bucket, key: key
     rescue Aws::S3::Errors::NoSuchKey
       puts "Could not locate #{key} in #{bucket}. Aborting."
       exit 1
     end
-
-    if meta[:metadata]["x-amz-matdesc"].nil?
-      s3_client = s3
-    else
-      kms_key_id = JSON.parse(meta[:metadata]["x-amz-matdesc"])["kms_cmk_id"]
-      kms = Aws::KMS::Client.new
-      s3_client = Aws::S3::Encryption::Client.new(kms_key_id: kms_key_id, kms_client: kms, client: s3)
-    end
-
-    response = s3_client.get_object bucket: bucket, key: key
 
     puts response.data.body.read
 
@@ -121,7 +75,6 @@ namespace :citadel do
     key = args[:key]
 
     s3 = Aws::S3::Client.new
-
     begin
       response = s3.get_object bucket: bucket, key: key
     rescue Aws::S3::Errors::NoSuchKey
@@ -138,7 +91,7 @@ namespace :citadel do
     begin
       JSON.parse payload
       puts "Saving #{key} to #{bucket}"
-      s3.put_object bucket: bucket, key: key, body: payload
+      s3.put_object bucket: bucket, key: key, body: payload, server_side_encryption: "AES256"
       puts "Success!"
       exit 0
     rescue JSON::ParserError
@@ -153,14 +106,6 @@ namespace :citadel do
       exit 1
     end
     ENV['CITADEL_BUCKET']
-  end
-
-  def key_id_env!
-    if ENV['CITADEL_KEY_ID'].nil?
-      puts "Set CITADEL_KEY_ID."
-      exit 1
-    end
-    ENV['CITADEL_KEY_ID']
   end
 
   def ensure_editor!
