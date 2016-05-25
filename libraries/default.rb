@@ -22,8 +22,7 @@ class Citadel
   attr_reader :bucket, :region, :credentials
 
   def initialize(node, bucket=nil)
-
-    self.class.send(:include, Aws)
+    require 'aws-sdk-resources'
 
     @node = node
     @bucket = bucket || node['citadel']['bucket']

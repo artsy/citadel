@@ -27,5 +27,3 @@ chef_gem 'aws-sdk' do
   version '2.3.3'
   compile_time true if respond_to?(:compile_time)
 end
-
-require 'aws-sdk'

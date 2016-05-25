@@ -26,13 +26,15 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-require 'json'
 
 class Citadel
   module S3
     extend self
 
     def get(bucket, key, credentials, region)
+      require 'json'
+      require 'aws-sdk-resources'
+
       s3 = Aws::S3::Client.new(region: region, credentials: credentials)
 
       begin
