@@ -35,11 +35,11 @@ class Citadel
       require 'json'
       require 'aws-sdk'
 
-      s3 = Aws::S3::Client.new(region: region, credentials: credentials)
+      s3 = ::Aws::S3::Client.new(region: region, credentials: credentials)
 
       begin
         response = s3.get_object bucket: bucket, key: key
-      rescue Aws::S3::Errors::NoSuchKey
+      rescue ::Aws::S3::Errors::NoSuchKey
         raise "Could not locate #{key} in #{bucket}. Aborting."
       end
 

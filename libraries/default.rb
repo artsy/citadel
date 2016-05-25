@@ -30,10 +30,10 @@ class Citadel
 
     if node['citadel']['access_key_id'] && node['citadel']['secret_access_key']
       # Manually specified credentials
-      @credentials = Aws::Credentials.new(node['citadel']['access_key_id'], node['citadel']['secret_access_key'])
+      @credentials = ::Aws::Credentials.new(node['citadel']['access_key_id'], node['citadel']['secret_access_key'])
     else
       # IAM credentials
-      @credentials = Aws::InstanceProfileCredentials.new
+      @credentials = ::Aws::InstanceProfileCredentials.new
     end
   end
 
