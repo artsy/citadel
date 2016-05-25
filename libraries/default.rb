@@ -22,7 +22,8 @@ class Citadel
   attr_reader :bucket, :region, :credentials
 
   def initialize(node, bucket=nil)
-    require 'aws-sdk'
+
+    self.class.send(:include, Aws)
 
     @node = node
     @bucket = bucket || node['citadel']['bucket']
@@ -30,10 +31,10 @@ class Citadel
 
     if node['citadel']['access_key_id'] && node['citadel']['secret_access_key']
       # Manually specified credentials
-      @credentials = ::Aws::Credentials.new(node['citadel']['access_key_id'], node['citadel']['secret_access_key'])
+      @credentials = Aws::Credentials.new(node['citadel']['access_key_id'], node['citadel']['secret_access_key'])
     else
       # IAM credentials
-      @credentials = ::Aws::InstanceProfileCredentials.new
+      @credentials = Aws::InstanceProfileCredentials.new
     end
   end
 

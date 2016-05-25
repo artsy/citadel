@@ -26,20 +26,18 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+require 'json'
 
 class Citadel
   module S3
     extend self
 
     def get(bucket, key, credentials, region)
-      require 'json'
-      require 'aws-sdk'
-
-      s3 = ::Aws::S3::Client.new(region: region, credentials: credentials)
+      s3 = Aws::S3::Client.new(region: region, credentials: credentials)
 
       begin
         response = s3.get_object bucket: bucket, key: key
-      rescue ::Aws::S3::Errors::NoSuchKey
+      rescue Aws::S3::Errors::NoSuchKey
         raise "Could not locate #{key} in #{bucket}. Aborting."
       end
 
